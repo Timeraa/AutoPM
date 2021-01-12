@@ -36,3 +36,16 @@ aPM.recheck(); //* Re-check the folder
 aPM.installMissing(); //* Promise<void> Installs missing dependencies.
 aPM.uninstallUnused(); //* Promise<void> Uninstalls unused dependencies.
 ```
+
+## Settings
+
+Simply include the setting while creating the AutoPM instance.
+
+```Typescript
+const aPM = new AutoPM({ path: "D:\Coding\AutoPM", exclude: ["@types/chrome"] });
+```
+
+| Settings | Type          | Description                            | Default       |
+| -------- | ------------- | -------------------------------------- | ------------- |
+| path     | string        | Path to the directory.                 | process.cwd() |
+| exclude  | Array<string> | Modules to exlcude from unusedModules. |               |
