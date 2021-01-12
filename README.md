@@ -1,6 +1,6 @@
 # Auto Package Manager
 
-Simple script to detect unused dependencies and missing dependencies and functions to automatically install/remove those.
+Simple module to detect unused dependencies and missing dependencies and functions to automatically install/remove those.
 
 ## Compatability
 
