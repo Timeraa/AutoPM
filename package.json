@@ -1,0 +1,37 @@
+{
+	"name": "auto-npm",
+	"version": "1.0.0",
+	"description": "Simple script to detect unused dependencies and missing dependencies and functions to automatically install/remove those.",
+	"main": "index.js",
+	"author": "Timeraa",
+	"license": "MPL-2.0",
+	"repository": "git@github.com:Timeraa/auto-npm.git",
+	"contributors": [
+		"Bas950"
+	],
+	"files": [
+		"bin"
+	],
+	"keywords": [
+		"typescript",
+		"dependencies",
+		"autoinstall"
+	],
+	"homepage": "https://github.com/Timeraa/auto-npm#readme",
+	"bugs": {
+		"url": "https://github.com/Timeraa/auto-npm/issues"
+	},
+	"funding": {
+		"type": "patreon",
+		"url": "https://patreon.com/Timeraa"
+	},
+	"dependencies": {
+		"builtin-modules": "^3.2.0",
+		"fast-glob": "^3.2.4",
+		"require-package-name": "^2.0.1",
+		"source-map-support": "^0.5.19"
+	},
+	"devDependencies": {
+		"@types/node": "^14.14.20"
+	}
+}
