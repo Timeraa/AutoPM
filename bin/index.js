@@ -46,8 +46,15 @@ var child_process_1 = require("child_process");
 var fs_1 = require("fs");
 var path_1 = require("path");
 var getUsedModules_1 = __importDefault(require("./functions/getUsedModules"));
-var AutoNPM = /** @class */ (function () {
-    function AutoNPM(path) {
+/**
+ * Auto Package Manager
+ */
+var AutoPM = /** @class */ (function () {
+    /**
+     * Create a new Auto Package Manager instance.
+     * @param path Path to a project containing a package.json in it's root directory.
+     */
+    function AutoPM(path) {
         if (path === void 0) { path = process.cwd(); }
         this.packageManager = "npm";
         this.usedModules = [];
@@ -58,11 +65,14 @@ var AutoNPM = /** @class */ (function () {
             this.packageManager = "yarn";
         this.recheck();
     }
-    AutoNPM.prototype.recheck = function () {
+    /**
+     * Re-checks module usage.
+     */
+    AutoPM.prototype.recheck = function () {
         this.usedModules = getUsedModules_1.default(this.path);
         this.unusedModules = this.updateUnused();
     };
-    Object.defineProperty(AutoNPM.prototype, "missingModules", {
+    Object.defineProperty(AutoPM.prototype, "missingModules", {
         get: function () {
             var _this = this;
             return this.usedModules.filter(function (m) {
@@ -73,7 +83,10 @@ var AutoNPM = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    AutoNPM.prototype.installMissing = function () {
+    /**
+     * Installs missing dependencies.
+     */
+    AutoPM.prototype.installMissing = function () {
         return __awaiter(this, void 0, void 0, function () {
             var missing;
             return __generator(this, function (_a) {
@@ -91,7 +104,10 @@ var AutoNPM = /** @class */ (function () {
             });
         });
     };
-    AutoNPM.prototype.uninstallUnused = function () {
+    /**
+     * Uninstalls unused dependencies.
+     */
+    AutoPM.prototype.uninstallUnused = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -107,7 +123,7 @@ var AutoNPM = /** @class */ (function () {
             });
         });
     };
-    AutoNPM.prototype.exec = function (cmd) {
+    AutoPM.prototype.exec = function (cmd) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 return [2 /*return*/, new Promise(function (resolve, reject) {
@@ -122,7 +138,7 @@ var AutoNPM = /** @class */ (function () {
             });
         });
     };
-    AutoNPM.prototype.updateUnused = function () {
+    AutoPM.prototype.updateUnused = function () {
         var _this = this;
         return Object.keys(this.pkgJson.dependencies)
             .filter(function (m) { return !_this.usedModules.includes(m); })
@@ -132,7 +148,7 @@ var AutoNPM = /** @class */ (function () {
             });
         });
     };
-    return AutoNPM;
+    return AutoPM;
 }());
-exports.default = AutoNPM;
+exports.default = AutoPM;
 //# sourceMappingURL=index.js.map

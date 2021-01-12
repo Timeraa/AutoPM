@@ -1,11 +1,11 @@
 {
-	"name": "auto-npm",
+	"name": "autopm",
 	"version": "1.0.0",
 	"description": "Simple script to detect unused dependencies and missing dependencies and functions to automatically install/remove those.",
 	"main": "index.js",
 	"author": "Timeraa",
 	"license": "MPL-2.0",
-	"repository": "git@github.com:Timeraa/auto-npm.git",
+	"repository": "git@github.com:Timeraa/autopm.git",
 	"contributors": [
 		"Bas950"
 	],
@@ -17,9 +17,9 @@
 		"dependencies",
 		"autoinstall"
 	],
-	"homepage": "https://github.com/Timeraa/auto-npm#readme",
+	"homepage": "https://github.com/Timeraa/autopm#readme",
 	"bugs": {
-		"url": "https://github.com/Timeraa/auto-npm/issues"
+		"url": "https://github.com/Timeraa/autopm/issues"
 	},
 	"funding": {
 		"type": "patreon",

@@ -9,13 +9,20 @@ import { resolve } from "path";
 
 import getUsedModules from "./functions/getUsedModules";
 
-export default class AutoNPM {
+/**
+ * Auto Package Manager
+ */
+export default class AutoPM {
 	private packageManager: "npm" | "yarn" = "npm";
 	private pkgJson;
 	path;
 	usedModules: string[] = [];
 	unusedModules: string[] = [];
 
+	/**
+	 * Create a new Auto Package Manager instance.
+	 * @param path Path to a project containing a package.json in it's root directory.
+	 */
 	constructor(path: string = process.cwd()) {
 		this.path = path;
 		this.pkgJson = require(resolve(path, "package.json"));
@@ -26,6 +33,9 @@ export default class AutoNPM {
 		this.recheck();
 	}
 
+	/**
+	 * Re-checks module usage.
+	 */
 	recheck() {
 		this.usedModules = getUsedModules(this.path);
 		this.unusedModules = this.updateUnused();
@@ -39,6 +49,9 @@ export default class AutoNPM {
 		);
 	}
 
+	/**
+	 * Installs missing dependencies.
+	 */
 	async installMissing() {
 		const missing = this.missingModules;
 
@@ -53,6 +66,9 @@ export default class AutoNPM {
 		this.usedModules.concat(missing);
 	}
 
+	/**
+	 * Uninstalls unused dependencies.
+	 */
 	async uninstallUnused() {
 		if (!this.unusedModules) return;
 

@@ -1,4 +1,4 @@
-# Auto-NPM
+# Auto Package Manager
 
 Simple script to detect unused dependencies and missing dependencies and functions to automatically install/remove those.
 
@@ -6,33 +6,33 @@ Simple script to detect unused dependencies and missing dependencies and functio
 
 Uses yarn if you have yarn. (Detected by project's `yarn.lock`)
 
-Auto-NPM is run by default in [DevScript](https://www.npmjs.com/package/ts-devscript).
+AutoPM is run by default in [DevScript](https://www.npmjs.com/package/ts-devscript).
 
 ## Installation
 
 ```bash
 # global
-npm i -g auto-npm
+npm i -g autopm
 
 # npm
-npm i auto-npm
+npm i autopm
 
 # yarn
-yarn add auto-npm
+yarn add autopm
 ```
 
 ## Usage
 
 ```TypeScript
-import AutoNPM from "auto-npm";
+import AutoPM from "autopm";
 
 //* Automatically checks the process.cwd() if not specified
-const aNPM = new AutoNPM();
+const aPM = new AutoPM();
 
 //* Console log unused
-console.log(aNPM.unusedModules, aNPM.missingModules);
+console.log(aPM.unusedModules, aPM.missingModules);
 
-aNPM.recheck(); //* Re-check the folder
-aNPM.installMissing(); //* Promise<void> Installs missing dependencies.
-aNPM.uninstallUnused(); //* Promise<void> Uninstalls unused dependencies.
+aPM.recheck(); //* Re-check the folder
+aPM.installMissing(); //* Promise<void> Installs missing dependencies.
+aPM.uninstallUnused(); //* Promise<void> Uninstalls unused dependencies.
 ```
