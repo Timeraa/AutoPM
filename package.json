@@ -1,6 +1,6 @@
 {
 	"name": "autopm",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Simple module to detect unused dependencies and missing dependencies and functions to automatically install/remove those.",
 	"main": "index.js",
 	"author": "Timeraa",
