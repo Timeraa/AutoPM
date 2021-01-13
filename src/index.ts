@@ -56,7 +56,8 @@ export default class AutoPM {
 		return this.usedModules.filter(
 			m =>
 				!builtinModules.includes(m) &&
-				!Object.keys(this.pkgJson.dependencies).includes(m)
+				!Object.keys(this.pkgJson.dependencies).includes(m) &&
+				!Object.keys(this.pkgJson.devDependencies).includes(m)
 		);
 	}
 
