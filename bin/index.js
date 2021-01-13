@@ -55,14 +55,17 @@ var AutoPM = /** @class */ (function () {
      * @param path Path to a project containing a package.json in it's root directory.
      * @param exclude Modules to exlcude from unusedModules.
      */
-    function AutoPM(_a) {
-        var _b = _a.path, path = _b === void 0 ? process.cwd() : _b, _c = _a.exclude, exclude = _c === void 0 ? [] : _c;
+    function AutoPM(options) {
+        if (options === void 0) { options = {
+            path: process.cwd(),
+            exclude: []
+        }; }
         this.packageManager = "npm";
         this.usedModules = [];
         this.unusedModules = [];
-        this.path = path;
-        this.exclude = exclude;
-        this.pkgJson = require(path_1.resolve(path, "package.json"));
+        this.path = options.path || process.cwd();
+        this.exclude = options.exclude || [];
+        this.pkgJson = require(path_1.resolve(this.path, "package.json"));
         if (fs_1.existsSync(path_1.resolve(this.path, "yarn.lock")))
             this.packageManager = "yarn";
         this.recheck();

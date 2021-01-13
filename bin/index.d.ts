@@ -15,9 +15,9 @@ export default class AutoPM {
      * @param path Path to a project containing a package.json in it's root directory.
      * @param exclude Modules to exlcude from unusedModules.
      */
-    constructor({ path, exclude }: {
-        path: string;
-        exclude: string[];
+    constructor(options?: {
+        path?: string;
+        exclude?: string[];
     });
     /**
      * Re-checks module usage.

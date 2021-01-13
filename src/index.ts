@@ -16,7 +16,7 @@ export default class AutoPM {
 	private packageManager: "npm" | "yarn" = "npm";
 	private pkgJson;
 	path;
-	exclude;
+	exclude: string[];
 	usedModules: string[] = [];
 	unusedModules: string[] = [];
 
@@ -25,16 +25,18 @@ export default class AutoPM {
 	 * @param path Path to a project containing a package.json in it's root directory.
 	 * @param exclude Modules to exlcude from unusedModules.
 	 */
-	constructor({
-		path = process.cwd(),
-		exclude = []
-	}: {
-		path: string;
-		exclude: string[];
-	}) {
-		this.path = path;
-		this.exclude = exclude;
-		this.pkgJson = require(resolve(path, "package.json"));
+	constructor(
+		options: {
+			path?: string;
+			exclude?: string[];
+		} = {
+			path: process.cwd(),
+			exclude: []
+		}
+	) {
+		this.path = options.path || process.cwd();
+		this.exclude = options.exclude || [];
+		this.pkgJson = require(resolve(this.path, "package.json"));
 
 		if (existsSync(resolve(this.path, "yarn.lock")))
 			this.packageManager = "yarn";
