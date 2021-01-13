@@ -53,13 +53,15 @@ var AutoPM = /** @class */ (function () {
     /**
      * Create a new Auto Package Manager instance.
      * @param path Path to a project containing a package.json in it's root directory.
+     * @param exclude Modules to exlcude from unusedModules.
      */
-    function AutoPM(path) {
-        if (path === void 0) { path = process.cwd(); }
+    function AutoPM(_a) {
+        var _b = _a.path, path = _b === void 0 ? process.cwd() : _b, _c = _a.exclude, exclude = _c === void 0 ? [] : _c;
         this.packageManager = "npm";
         this.usedModules = [];
         this.unusedModules = [];
         this.path = path;
+        this.exclude = exclude;
         this.pkgJson = require(path_1.resolve(path, "package.json"));
         if (fs_1.existsSync(path_1.resolve(this.path, "yarn.lock")))
             this.packageManager = "yarn";
@@ -146,7 +148,8 @@ var AutoPM = /** @class */ (function () {
             return !Object.values(_this.pkgJson.scripts || {}).find(function (s) {
                 return Object.keys(JSON.parse(fs_1.readFileSync(path_1.resolve(_this.path, "node_modules", m, "package.json"), "utf8")).bin || {}).find(function (bin) { return s.includes(bin); });
             });
-        });
+        })
+            .filter(function (m) { return !_this.exclude.includes(m); });
     };
     return AutoPM;
 }());
