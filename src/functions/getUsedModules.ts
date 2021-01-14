@@ -5,8 +5,11 @@ import { resolve } from "path";
 import name from "require-package-name";
 
 import { IMPORTREGEX, MODULENAMEREGEX, REQUIREREGEX } from "../constants";
+import getModuleVersions, {
+	instanceOfModuleVersions
+} from "./getModuleVersions";
 
-export default function (path: string = process.cwd()) {
+export default async function (path: string = process.cwd()) {
 	const files = glob("**", {
 		onlyFiles: true,
 		ignore: ["node_modules"],
@@ -31,5 +34,19 @@ export default function (path: string = process.cwd()) {
 		}
 	}
 
-	return Array.from(requiredModules.keys());
+	const usedArry: string[] = Array.from(requiredModules.keys()),
+		unknownArray: string[] = [];
+
+	usedArry.filter(async module => {
+		const versions = await getModuleVersions(module);
+		//* Make sure module has versions / is a valid module
+		if (!instanceOfModuleVersions(versions)) {
+			unknownArray.push(module);
+			return false;
+		} else {
+			return true;
+		}
+	});
+
+	return { usedModules: usedArry, unknownModules: unknownArray };
 }

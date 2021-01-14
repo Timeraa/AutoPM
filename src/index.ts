@@ -8,6 +8,26 @@ import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 import getUsedModules from "./functions/getUsedModules";
+import getModuleVersions, {
+	instanceOfModuleVersions
+} from "./functions/getModuleVersions";
+import { compare } from "compare-versions";
+import { getAvailableAtTypesOfModules } from "./functions/getAtTypesOfModule";
+
+interface deprecatedModules {
+	module: string;
+	deprecatedMessage: string;
+	currentVersion: string;
+	latestVersion: string;
+	newerNonDeprecatedVersions: string[];
+}
+
+interface outdatedModules {
+	module: string;
+	currentVersion: string;
+	latestVersion: string;
+	newerNonDeprecatedVersions: string[];
+}
 
 /**
  * Auto Package Manager
@@ -19,6 +39,9 @@ export default class AutoPM {
 	exclude: string[];
 	usedModules: string[] = [];
 	unusedModules: string[] = [];
+	unknownModules: string[] = [];
+	outdatedModules: outdatedModules[] = [];
+	deprecatedModules: deprecatedModules[] = [];
 
 	/**
 	 * Create a new Auto Package Manager instance.
@@ -47,27 +70,40 @@ export default class AutoPM {
 	/**
 	 * Re-checks module usage.
 	 */
-	recheck() {
-		this.usedModules = getUsedModules(this.path);
-		this.unusedModules = this.updateUnused();
+	async recheck() {
+		const modules = await getUsedModules(this.path);
+		this.usedModules = modules.usedModules;
+		this.unknownModules = modules.unknownModules;
+		this.updateUnused();
+		await this.updateOutdatedAndDeprecated();
 	}
 
 	get missingModules(): string[] {
-		return this.usedModules.filter(
-			m =>
-				!builtinModules.includes(m) &&
-				!Object.keys(this.pkgJson.dependencies).includes(m) &&
-				!Object.keys(this.pkgJson.devDependencies).includes(m)
-		);
+		if (this.pkgJson.devDependencies)
+			return this.usedModules.filter(
+				m =>
+					!builtinModules.includes(m) &&
+					!Object.keys(this.pkgJson.dependencies).includes(m) &&
+					!Object.keys(this.pkgJson.devDependencies).includes(m)
+			);
+		else
+			return this.usedModules.filter(
+				m =>
+					!builtinModules.includes(m) &&
+					!Object.keys(this.pkgJson.dependencies).includes(m)
+			);
 	}
 
 	/**
 	 * Installs missing dependencies.
+	 *
+	 * @param installTypes Installs the types/module of the missing modules as devDependency. (Default: true)
 	 */
-	async installMissing() {
+	async installMissing(installTypes = true) {
 		const missing = this.missingModules;
 
 		if (!missing) return;
+		const availableTypeModules = await getAvailableAtTypesOfModules(missing);
 
 		await this.exec(
 			`${
@@ -75,20 +111,180 @@ export default class AutoPM {
 			} ${missing.join(" ")}`
 		);
 
+		if (installTypes && availableTypeModules.length)
+			await this.exec(
+				`${
+					this.packageManager === "yarn"
+						? "yarn add --dev"
+						: "npm install --save-dev"
+				} ${availableTypeModules.join(" ")}`
+			);
+
 		this.usedModules.concat(missing);
 	}
 
 	/**
 	 * Uninstalls unused dependencies.
+	 *
+	 * @param uninstallTypes Uninstalls the types/module of the unused modules if installed. (Default: true)
 	 */
-	async uninstallUnused() {
+	async uninstallUnused(uninstallTypes = true) {
 		if (!this.unusedModules) return;
+		const availableTypeModules = this.pkgJson.devDependencies
+			? Object.keys(this.pkgJson.devDependencies).filter((module: string) =>
+					this.unusedModules.includes(module.replace("@types/", ""))
+			  )
+			: [];
 
 		await this.exec(
-			`${this.packageManager} remove ${this.unusedModules.join(" ")}`
+			`${this.packageManager} remove ${
+				uninstallTypes
+					? this.unusedModules.concat(availableTypeModules).join(" ")
+					: this.unusedModules.join(" ")
+			}`
 		);
 
 		this.unusedModules = [];
+	}
+
+	/**
+	 * Upgrades given modules to given versions.
+	 *
+	 * @param modules List of dependencies to upgrade to given version.
+	 * @param devModules List of devDependencies to upgrade to given version.
+	 */
+	async upgradeModulesToVersions(
+		modules: { module: string; version: string }[],
+		devModules: { module: string; version: string }[]
+	) {
+		//* Filter out ones that dont exist in pkgJson
+		modules = modules.filter(module =>
+			Object.keys(this.pkgJson.dependencies).includes(module.module)
+		);
+		devModules = devModules.filter(
+			module =>
+				this.pkgJson.devDependencies &&
+				Object.keys(this.pkgJson.devDependencies).includes(module.module)
+		);
+
+		//* Return if both arrays are empty
+		if (!modules.length && !devModules.length) return;
+
+		if (this.packageManager === "yarn") {
+			await this.exec(
+				`yarn upgrade ${modules
+					.concat(devModules)
+					.map(module => {
+						return `${module.module}@${module.version}`;
+					})
+					.join(" ")}`
+			);
+		} else {
+			if (modules.length) {
+				await this.exec(
+					`npm install ${modules
+						.map(module => {
+							return `${module.module}@${module.version}`;
+						})
+						.join(" ")}`
+				);
+			}
+			if (devModules.length) {
+				await this.exec(
+					`npm install --save-dev ${devModules
+						.map(module => {
+							return `${module.module}@${module.version}`;
+						})
+						.join(" ")}`
+				);
+			}
+		}
+	}
+
+	/**
+	 * Upgrades all outdated dependencies to the latest version.
+	 */
+	async upgradeAllOutdatedToLatest() {
+		if (!this.outdatedModules) return;
+		if (this.packageManager === "yarn")
+			await this.exec(
+				`yarn upgrade --latest ${this.outdatedModules
+					.map(module => {
+						return module.module;
+					})
+					.join(" ")}`
+			);
+		else {
+			//* Split the outdatedModules to dependencies and devDependencies.
+			const devDependencies = this.outdatedModules.filter(
+					module =>
+						this.pkgJson.devDependencies &&
+						Object.keys(this.pkgJson.devDependencies).includes(module.module)
+				),
+				dependencies = this.outdatedModules.filter(module =>
+					Object.keys(this.pkgJson.dependencies).includes(module.module)
+				);
+
+			if (dependencies)
+				await this.exec(
+					"npm install " +
+						dependencies
+							.map(dependency => `${dependency.module}@latest`)
+							.join(" ")
+				);
+			if (devDependencies)
+				await this.exec(
+					"npm install --save-dev " +
+						dependencies
+							.map(dependency => `${dependency.module}@latest`)
+							.join(" ")
+				);
+		}
+
+		this.outdatedModules = [];
+	}
+
+	/**
+	 * Upgrades all deprecated dependencies to the latest version.
+	 */
+	async upgradeAllDeprecatedToLatest() {
+		if (!this.deprecatedModules) return;
+		if (this.packageManager === "yarn")
+			await this.exec(
+				`yarn upgrade --latest ${this.deprecatedModules
+					.map(module => {
+						return module.module;
+					})
+					.join(" ")}`
+			);
+		else {
+			//* Split the outdatedModules to dependencies and devDependencies.
+			const devDependencies = this.deprecatedModules.filter(
+					module =>
+						this.pkgJson.devDependencies &&
+						Object.keys(this.pkgJson.devDependencies).includes(module.module)
+				),
+				dependencies = this.deprecatedModules.filter(module =>
+					Object.keys(this.pkgJson.dependencies).includes(module.module)
+				);
+
+			if (dependencies)
+				await this.exec(
+					"npm install " +
+						dependencies
+							.map(dependency => `${dependency.module}@latest`)
+							.join(" ")
+				);
+			if (devDependencies)
+				await this.exec(
+					"npm install --save-dev " +
+						dependencies
+							.map(dependency => `${dependency.module}@latest`)
+							.join(" ")
+				);
+		}
+
+		this.deprecatedModules = [];
 	}
 
 	private async exec(cmd: string) {
@@ -103,21 +299,100 @@ export default class AutoPM {
 	}
 
 	private updateUnused() {
-		return Object.keys(this.pkgJson.dependencies)
+		this.unusedModules = Object.keys(this.pkgJson.dependencies)
 			.filter(m => !this.usedModules.includes(m))
 			.filter(
 				m =>
-					!(Object.values(this.pkgJson.scripts || {}) as string[]).find(s =>
-						Object.keys(
-							JSON.parse(
-								readFileSync(
-									resolve(this.path, "node_modules", m, "package.json"),
-									"utf8"
-								)
-							).bin || {}
-						).find(bin => s.includes(bin))
-					)
+					!(Object.values(this.pkgJson.scripts || {}) as string[]).find(s => {
+						if (existsSync(resolve(this.path, "node_modules")))
+							return Object.keys(
+								JSON.parse(
+									readFileSync(
+										resolve(this.path, "node_modules", m, "package.json"),
+										"utf8"
+									)
+								).bin || {}
+							).find(bin => s.includes(bin));
+						else if (existsSync(resolve(this.path, "../", "node_modules")))
+							return Object.keys(
+								JSON.parse(
+									readFileSync(
+										resolve(
+											this.path,
+											"../",
+											"node_modules",
+											m,
+											"package.json"
+										),
+										"utf8"
+									)
+								).bin || {}
+							).find(bin => s.includes(bin));
+						else return true;
+					})
 			)
 			.filter(m => !this.exclude.includes(m));
+	}
+
+	private async updateOutdatedAndDeprecated() {
+		const allDeps: {
+				[name: string]: string;
+			} = this.pkgJson.devDependencies
+				? Object.assign(this.pkgJson.dependencies, this.pkgJson.devDependencies)
+				: this.pkgJson.dependencies,
+			deprecated: deprecatedModules[] = [],
+			outdated: outdatedModules[] = [];
+
+		for (const [module, version] of Object.entries(allDeps)) {
+			const installedVersion = version.replace("^", ""),
+				npmVersions = await getModuleVersions(module);
+
+			//* Something went wrong while getting the versions?
+			if (!instanceOfModuleVersions(npmVersions)) continue;
+
+			//* Version is already the same as the lastest one on NPM. (Up-to-date)
+			// prettier-ignore
+			if (compare(installedVersion, npmVersions.versionTags.latest, "=")) continue;
+
+			//* Get index of the currently installed version in the npm versions array.
+			const vIndex = npmVersions.versions.findIndex(
+				v => v.version === installedVersion
+			);
+
+			//* Make sure the index is found.
+			if (vIndex < 0) continue;
+
+			const npmVersion = npmVersions.versions[vIndex];
+
+			//* Check if current version is deprecated.
+			if (npmVersion?.deprecated)
+				deprecated.push({
+					module: module,
+					deprecatedMessage: npmVersion.deprecated,
+					currentVersion: installedVersion,
+					latestVersion: npmVersions.versionTags.latest,
+					newerNonDeprecatedVersions: npmVersions.versions
+						.filter(v => {
+							if (v.deprecated) return false;
+							else return compare(installedVersion, v.version, "<");
+						})
+						.map(v => v.version)
+				});
+			else
+				outdated.push({
+					module: module,
+					currentVersion: installedVersion,
+					latestVersion: npmVersions.versionTags.latest,
+					newerNonDeprecatedVersions: npmVersions.versions
+						.filter(v => {
+							if (v.deprecated) return false;
+							else return compare(installedVersion, v.version, "<");
+						})
+						.map(v => v.version)
+				});
+		}
+
+		this.deprecatedModules = deprecated;
+		this.outdatedModules = outdated;
 	}
 }
