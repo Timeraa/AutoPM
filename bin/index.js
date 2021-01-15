@@ -392,7 +392,8 @@ var AutoPM = /** @class */ (function () {
                     return true;
             });
         })
-            .filter(function (m) { return !_this.exclude.includes(m); });
+            .filter(function (m) { return !_this.exclude.includes(m); })
+            .filter(function (m) { return !m.includes("@types/"); });
     };
     AutoPM.prototype.updateOutdatedAndDeprecated = function () {
         return __awaiter(this, void 0, void 0, function () {

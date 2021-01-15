@@ -331,7 +331,8 @@ export default class AutoPM {
 						else return true;
 					})
 			)
-			.filter(m => !this.exclude.includes(m));
+			.filter(m => !this.exclude.includes(m))
+			.filter(m => !m.includes("@types/"));
 	}
 
 	private async updateOutdatedAndDeprecated() {
