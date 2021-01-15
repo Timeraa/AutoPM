@@ -378,6 +378,7 @@ export default class AutoPM {
 							else return compare(installedVersion, v.version, "<");
 						})
 						.map(v => v.version)
+						.reverse()
 				});
 			else
 				outdated.push({
@@ -390,6 +391,7 @@ export default class AutoPM {
 							else return compare(installedVersion, v.version, "<");
 						})
 						.map(v => v.version)
+						.reverse()
 				});
 		}
 
