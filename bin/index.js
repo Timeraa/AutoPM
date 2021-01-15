@@ -112,6 +112,7 @@ var AutoPM = /** @class */ (function () {
                         return [4 /*yield*/, this.updateOutdatedAndDeprecated()];
                     case 2:
                         _a.sent();
+                        this.pkgJson = require(path_1.resolve(this.path, "package.json"));
                         return [2 /*return*/];
                 }
             });

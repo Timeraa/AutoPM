@@ -76,6 +76,7 @@ export default class AutoPM {
 		this.unknownModules = modules.unknownModules;
 		this.updateUnused();
 		await this.updateOutdatedAndDeprecated();
+		this.pkgJson = require(resolve(this.path, "package.json"));
 	}
 
 	get missingModules(): string[] {
