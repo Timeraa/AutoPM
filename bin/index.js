@@ -440,6 +440,7 @@ var AutoPM = /** @class */ (function () {
                                                         return compare_versions_1.compare(installedVersion, v.version, "<");
                                                 })
                                                     .map(function (v) { return v.version; })
+                                                    .reverse()
                                             });
                                         else
                                             outdated.push({
@@ -454,6 +455,7 @@ var AutoPM = /** @class */ (function () {
                                                         return compare_versions_1.compare(installedVersion, v.version, "<");
                                                 })
                                                     .map(function (v) { return v.version; })
+                                                    .reverse()
                                             });
                                         return [2 /*return*/];
                                 }

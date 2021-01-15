@@ -34,7 +34,7 @@ interface outdatedModules {
  */
 export default class AutoPM {
 	private packageManager: "npm" | "yarn" = "npm";
-	private pkgJson;
+	pkgJson;
 	path;
 	exclude: string[];
 	usedModules: string[] = [];

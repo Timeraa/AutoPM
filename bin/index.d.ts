@@ -18,7 +18,7 @@ interface outdatedModules {
  */
 export default class AutoPM {
     private packageManager;
-    private pkgJson;
+    pkgJson: any;
     path: string;
     exclude: string[];
     usedModules: string[];
