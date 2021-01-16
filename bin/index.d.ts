@@ -1,17 +1,24 @@
 #!/usr/bin/env node
 import "source-map-support/register";
-interface deprecatedModules {
+export interface deprecatedModules {
     module: string;
     deprecatedMessage: string;
     currentVersion: string;
     latestVersion: string;
     newerNonDeprecatedVersions: string[];
 }
-interface outdatedModules {
+export interface outdatedModules {
     module: string;
     currentVersion: string;
     latestVersion: string;
     newerNonDeprecatedVersions: string[];
+}
+export interface changedModules {
+    module: string;
+    version: string;
+    fromVersion?: string;
+    devDependency: boolean;
+    type: "INSTALLED" | "UPDATED" | "REMOVED";
 }
 /**
  * Auto Package Manager
@@ -26,6 +33,7 @@ export default class AutoPM {
     unknownModules: string[];
     outdatedModules: outdatedModules[];
     deprecatedModules: deprecatedModules[];
+    changedModules: changedModules[];
     /**
      * Create a new Auto Package Manager instance.
      * @param path Path to a project containing a package.json in it's root directory.
@@ -77,4 +85,3 @@ export default class AutoPM {
     private updateUnused;
     private updateOutdatedAndDeprecated;
 }
-export {};

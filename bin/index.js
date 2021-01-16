@@ -88,6 +88,7 @@ var AutoPM = /** @class */ (function () {
         this.unknownModules = [];
         this.outdatedModules = [];
         this.deprecatedModules = [];
+        this.changedModules = [];
         this.path = options.path || process.cwd();
         this.exclude = options.exclude || [];
         this.pkgJson = require(path_1.resolve(this.path, "package.json"));
@@ -113,6 +114,7 @@ var AutoPM = /** @class */ (function () {
                     case 2:
                         _a.sent();
                         this.pkgJson = require(path_1.resolve(this.path, "package.json"));
+                        this.changedModules = [];
                         return [2 /*return*/];
                 }
             });
@@ -145,6 +147,7 @@ var AutoPM = /** @class */ (function () {
         if (installTypes === void 0) { installTypes = true; }
         return __awaiter(this, void 0, void 0, function () {
             var missing, availableTypeModules;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -157,12 +160,28 @@ var AutoPM = /** @class */ (function () {
                         return [4 /*yield*/, this.exec((this.packageManager === "yarn" ? "yarn add" : "npm install") + " " + missing.join(" "))];
                     case 2:
                         _a.sent();
+                        missing.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m,
+                                devDependency: false,
+                                version: "latest",
+                                type: "INSTALLED"
+                            });
+                        });
                         if (!(installTypes && availableTypeModules.length)) return [3 /*break*/, 4];
                         return [4 /*yield*/, this.exec((this.packageManager === "yarn"
                                 ? "yarn add --dev"
                                 : "npm install --save-dev") + " " + availableTypeModules.join(" "))];
                     case 3:
                         _a.sent();
+                        availableTypeModules.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m,
+                                devDependency: true,
+                                version: "latest",
+                                type: "INSTALLED"
+                            });
+                        });
                         _a.label = 4;
                     case 4:
                         this.usedModules.concat(missing);
@@ -196,6 +215,22 @@ var AutoPM = /** @class */ (function () {
                                 : this.unusedModules.join(" ")))];
                     case 1:
                         _a.sent();
+                        this.unusedModules.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m,
+                                devDependency: false,
+                                version: _this.pkgJson.dependencies[m],
+                                type: "REMOVED"
+                            });
+                        });
+                        availableTypeModules.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m,
+                                devDependency: true,
+                                version: _this.pkgJson.devDependencies[m],
+                                type: "REMOVED"
+                            });
+                        });
                         this.unusedModules = [];
                         return [2 /*return*/];
                 }
@@ -255,7 +290,26 @@ var AutoPM = /** @class */ (function () {
                     case 5:
                         _a.sent();
                         _a.label = 6;
-                    case 6: return [2 /*return*/];
+                    case 6:
+                        modules.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m.module,
+                                devDependency: false,
+                                version: m.version,
+                                fromVersion: _this.pkgJson.dependencies[m.module],
+                                type: "UPDATED"
+                            });
+                        });
+                        devModules.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m.module,
+                                devDependency: true,
+                                version: m.version,
+                                fromVersion: _this.pkgJson.devDependencies[m.module],
+                                type: "UPDATED"
+                            });
+                        });
+                        return [2 /*return*/];
                 }
             });
         });
@@ -272,6 +326,12 @@ var AutoPM = /** @class */ (function () {
                     case 0:
                         if (!this.outdatedModules)
                             return [2 /*return*/];
+                        devDependencies = this.outdatedModules.filter(function (module) {
+                            return _this.pkgJson.devDependencies &&
+                                Object.keys(_this.pkgJson.devDependencies).includes(module.module);
+                        }), dependencies = this.outdatedModules.filter(function (module) {
+                            return Object.keys(_this.pkgJson.dependencies).includes(module.module);
+                        });
                         if (!(this.packageManager === "yarn")) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.exec("yarn upgrade --latest " + this.outdatedModules
                                 .map(function (module) {
@@ -282,13 +342,7 @@ var AutoPM = /** @class */ (function () {
                         _a.sent();
                         return [3 /*break*/, 6];
                     case 2:
-                        devDependencies = this.outdatedModules.filter(function (module) {
-                            return _this.pkgJson.devDependencies &&
-                                Object.keys(_this.pkgJson.devDependencies).includes(module.module);
-                        }), dependencies = this.outdatedModules.filter(function (module) {
-                            return Object.keys(_this.pkgJson.dependencies).includes(module.module);
-                        });
-                        if (!dependencies) return [3 /*break*/, 4];
+                        if (!dependencies.length) return [3 /*break*/, 4];
                         return [4 /*yield*/, this.exec("npm install " +
                                 dependencies
                                     .map(function (dependency) { return dependency.module + "@latest"; })
@@ -297,7 +351,7 @@ var AutoPM = /** @class */ (function () {
                         _a.sent();
                         _a.label = 4;
                     case 4:
-                        if (!devDependencies) return [3 /*break*/, 6];
+                        if (!devDependencies.length) return [3 /*break*/, 6];
                         return [4 /*yield*/, this.exec("npm install --save-dev " +
                                 dependencies
                                     .map(function (dependency) { return dependency.module + "@latest"; })
@@ -306,6 +360,24 @@ var AutoPM = /** @class */ (function () {
                         _a.sent();
                         _a.label = 6;
                     case 6:
+                        dependencies.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m.module,
+                                devDependency: false,
+                                version: "latest",
+                                fromVersion: _this.pkgJson.dependencies[m.module],
+                                type: "UPDATED"
+                            });
+                        });
+                        devDependencies.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m.module,
+                                devDependency: true,
+                                version: "latest",
+                                fromVersion: _this.pkgJson.devDependencies[m.module],
+                                type: "UPDATED"
+                            });
+                        });
                         this.outdatedModules = [];
                         return [2 /*return*/];
                 }
@@ -324,6 +396,12 @@ var AutoPM = /** @class */ (function () {
                     case 0:
                         if (!this.deprecatedModules)
                             return [2 /*return*/];
+                        devDependencies = this.deprecatedModules.filter(function (module) {
+                            return _this.pkgJson.devDependencies &&
+                                Object.keys(_this.pkgJson.devDependencies).includes(module.module);
+                        }), dependencies = this.deprecatedModules.filter(function (module) {
+                            return Object.keys(_this.pkgJson.dependencies).includes(module.module);
+                        });
                         if (!(this.packageManager === "yarn")) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.exec("yarn upgrade --latest " + this.deprecatedModules
                                 .map(function (module) {
@@ -334,13 +412,7 @@ var AutoPM = /** @class */ (function () {
                         _a.sent();
                         return [3 /*break*/, 6];
                     case 2:
-                        devDependencies = this.deprecatedModules.filter(function (module) {
-                            return _this.pkgJson.devDependencies &&
-                                Object.keys(_this.pkgJson.devDependencies).includes(module.module);
-                        }), dependencies = this.deprecatedModules.filter(function (module) {
-                            return Object.keys(_this.pkgJson.dependencies).includes(module.module);
-                        });
-                        if (!dependencies) return [3 /*break*/, 4];
+                        if (!dependencies.length) return [3 /*break*/, 4];
                         return [4 /*yield*/, this.exec("npm install " +
                                 dependencies
                                     .map(function (dependency) { return dependency.module + "@latest"; })
@@ -349,7 +421,7 @@ var AutoPM = /** @class */ (function () {
                         _a.sent();
                         _a.label = 4;
                     case 4:
-                        if (!devDependencies) return [3 /*break*/, 6];
+                        if (!devDependencies.length) return [3 /*break*/, 6];
                         return [4 /*yield*/, this.exec("npm install --save-dev " +
                                 dependencies
                                     .map(function (dependency) { return dependency.module + "@latest"; })
@@ -358,6 +430,24 @@ var AutoPM = /** @class */ (function () {
                         _a.sent();
                         _a.label = 6;
                     case 6:
+                        dependencies.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m.module,
+                                devDependency: false,
+                                version: "latest",
+                                fromVersion: _this.pkgJson.dependencies[m.module],
+                                type: "UPDATED"
+                            });
+                        });
+                        devDependencies.forEach(function (m) {
+                            return _this.changedModules.push({
+                                module: m.module,
+                                devDependency: true,
+                                version: "latest",
+                                fromVersion: _this.pkgJson.devDependencies[m.module],
+                                type: "UPDATED"
+                            });
+                        });
                         this.deprecatedModules = [];
                         return [2 /*return*/];
                 }
