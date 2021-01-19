@@ -69,6 +69,10 @@ export default class AutoPM {
 		this.path = options.path || process.cwd();
 		this.exclude = options.exclude || [];
 		this.pkgJson = require(resolve(this.path, "package.json"));
+		if (this.pkgJson.devDependencies)
+			Object.keys(this.pkgJson.devDependencies).forEach(
+				m => delete this.pkgJson.dependencies[m]
+			);
 
 		if (existsSync(resolve(this.path, "yarn.lock")))
 			this.packageManager = "yarn";
@@ -86,6 +90,10 @@ export default class AutoPM {
 		this.updateUnused();
 		await this.updateOutdatedAndDeprecated();
 		this.pkgJson = require(resolve(this.path, "package.json"));
+		if (this.pkgJson.devDependencies)
+			Object.keys(this.pkgJson.devDependencies).forEach(
+				m => delete this.pkgJson.dependencies[m]
+			);
 		this.changedModules = [];
 	}
 

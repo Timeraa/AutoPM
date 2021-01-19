@@ -78,6 +78,7 @@ var AutoPM = /** @class */ (function () {
      * @param exclude Modules to exlcude from unusedModules.
      */
     function AutoPM(options) {
+        var _this = this;
         if (options === void 0) { options = {
             path: process.cwd(),
             exclude: []
@@ -92,6 +93,8 @@ var AutoPM = /** @class */ (function () {
         this.path = options.path || process.cwd();
         this.exclude = options.exclude || [];
         this.pkgJson = require(path_1.resolve(this.path, "package.json"));
+        if (this.pkgJson.devDependencies)
+            Object.keys(this.pkgJson.devDependencies).forEach(function (m) { return delete _this.pkgJson.dependencies[m]; });
         if (fs_1.existsSync(path_1.resolve(this.path, "yarn.lock")))
             this.packageManager = "yarn";
         this.recheck();
@@ -102,6 +105,7 @@ var AutoPM = /** @class */ (function () {
     AutoPM.prototype.recheck = function () {
         return __awaiter(this, void 0, void 0, function () {
             var modules;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, getUsedModules_1.default(this.path)];
@@ -114,6 +118,8 @@ var AutoPM = /** @class */ (function () {
                     case 2:
                         _a.sent();
                         this.pkgJson = require(path_1.resolve(this.path, "package.json"));
+                        if (this.pkgJson.devDependencies)
+                            Object.keys(this.pkgJson.devDependencies).forEach(function (m) { return delete _this.pkgJson.dependencies[m]; });
                         this.changedModules = [];
                         return [2 /*return*/];
                 }
