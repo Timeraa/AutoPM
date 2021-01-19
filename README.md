@@ -78,6 +78,9 @@ aPM.upgradeAllOutdatedToLatest();
 
 //* Promise<void> Upgrades all deprecated dependencies to the latest version.
 aPM.upgradeAllDeprecatedToLatest();
+
+//* Console logs all changed dependencies between now and the last recheck.
+console.log(aPM.changedModules);
 ```
 
 ## Settings
