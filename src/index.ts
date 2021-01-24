@@ -426,7 +426,7 @@ export default class AutoPM {
 										"utf8"
 									)
 								).bin || {}
-							).find(bin => s.includes(bin));
+							).find(bin => s.toLowerCase().includes(bin.toLowerCase()));
 						else if (existsSync(resolve(this.path, "../", "node_modules")))
 							return Object.keys(
 								JSON.parse(
@@ -441,7 +441,7 @@ export default class AutoPM {
 										"utf8"
 									)
 								).bin || {}
-							).find(bin => s.includes(bin));
+							).find(bin => s.toLowerCase().includes(bin.toLowerCase()));
 						else return true;
 					})
 			)
