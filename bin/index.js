@@ -486,7 +486,6 @@ var AutoPM = /** @class */ (function () {
                     return (typeof mBin !== "object"
                         ? [m]
                         : Object.keys(mBin || {})).find(function (bin) {
-                        console.log(bin, m);
                         return s.toLowerCase().includes(bin.toLowerCase());
                     });
                 }
@@ -495,7 +494,6 @@ var AutoPM = /** @class */ (function () {
                     return (typeof mBin !== "object"
                         ? [m]
                         : Object.keys(mBin || {})).find(function (bin) {
-                        console.log(bin, m);
                         return s.toLowerCase().includes(bin.toLowerCase());
                     });
                 }

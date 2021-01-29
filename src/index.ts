@@ -428,7 +428,6 @@ export default class AutoPM {
 								? [m]
 								: Object.keys(mBin || {})
 							).find(bin => {
-								console.log(bin, m);
 								return s.toLowerCase().includes(bin.toLowerCase());
 							});
 						} else if (existsSync(resolve(this.path, "../", "node_modules"))) {
@@ -443,7 +442,6 @@ export default class AutoPM {
 								? [m]
 								: Object.keys(mBin || {})
 							).find(bin => {
-								console.log(bin, m);
 								return s.toLowerCase().includes(bin.toLowerCase());
 							});
 						} else return true;
