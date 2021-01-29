@@ -4,15 +4,13 @@ import "source-map-support/register";
 
 import builtinModules from "builtin-modules";
 import { exec } from "child_process";
+import { compare } from "compare-versions";
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
-import getUsedModules from "./functions/getUsedModules";
-import getModuleVersions, {
-	instanceOfModuleVersions
-} from "./functions/getModuleVersions";
-import { compare } from "compare-versions";
 import { getAvailableAtTypesOfModules } from "./functions/getAtTypesOfModule";
+import getModuleVersions, { instanceOfModuleVersions } from "./functions/getModuleVersions";
+import getUsedModules from "./functions/getUsedModules";
 
 export interface deprecatedModules {
 	module: string;
@@ -418,31 +416,37 @@ export default class AutoPM {
 			.filter(
 				m =>
 					!(Object.values(this.pkgJson.scripts || {}) as string[]).find(s => {
-						if (existsSync(resolve(this.path, "node_modules")))
-							return Object.keys(
-								JSON.parse(
-									readFileSync(
-										resolve(this.path, "node_modules", m, "package.json"),
-										"utf8"
-									)
-								).bin || {}
-							).find(bin => s.toLowerCase().includes(bin.toLowerCase()));
-						else if (existsSync(resolve(this.path, "../", "node_modules")))
-							return Object.keys(
-								JSON.parse(
-									readFileSync(
-										resolve(
-											this.path,
-											"../",
-											"node_modules",
-											m,
-											"package.json"
-										),
-										"utf8"
-									)
-								).bin || {}
-							).find(bin => s.toLowerCase().includes(bin.toLowerCase()));
-						else return true;
+						if (existsSync(resolve(this.path, "node_modules"))) {
+							const mBin = JSON.parse(
+								readFileSync(
+									resolve(this.path, "node_modules", m, "package.json"),
+									"utf8"
+								)
+							).bin;
+
+							return (typeof mBin !== "object"
+								? [m]
+								: Object.keys(mBin || {})
+							).find(bin => {
+								console.log(bin, m);
+								return s.toLowerCase().includes(bin.toLowerCase());
+							});
+						} else if (existsSync(resolve(this.path, "../", "node_modules"))) {
+							const mBin = JSON.parse(
+								readFileSync(
+									resolve(this.path, "../", "node_modules", m, "package.json"),
+									"utf8"
+								)
+							).bin;
+
+							return (typeof mBin !== "object"
+								? [m]
+								: Object.keys(mBin || {})
+							).find(bin => {
+								console.log(bin, m);
+								return s.toLowerCase().includes(bin.toLowerCase());
+							});
+						} else return true;
 					})
 			)
 			.filter(m => !this.exclude.includes(m))
@@ -513,3 +517,5 @@ export default class AutoPM {
 		this.outdatedModules = outdated;
 	}
 }
+
+function readPackageBinaries() {}

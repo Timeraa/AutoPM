@@ -62,12 +62,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("source-map-support/register");
 var builtin_modules_1 = __importDefault(require("builtin-modules"));
 var child_process_1 = require("child_process");
+var compare_versions_1 = require("compare-versions");
 var fs_1 = require("fs");
 var path_1 = require("path");
-var getUsedModules_1 = __importDefault(require("./functions/getUsedModules"));
-var getModuleVersions_1 = __importStar(require("./functions/getModuleVersions"));
-var compare_versions_1 = require("compare-versions");
 var getAtTypesOfModule_1 = require("./functions/getAtTypesOfModule");
+var getModuleVersions_1 = __importStar(require("./functions/getModuleVersions"));
+var getUsedModules_1 = __importDefault(require("./functions/getUsedModules"));
 /**
  * Auto Package Manager
  */
@@ -481,10 +481,24 @@ var AutoPM = /** @class */ (function () {
             .filter(function (m) { return !_this.usedModules.includes(m); })
             .filter(function (m) {
             return !Object.values(_this.pkgJson.scripts || {}).find(function (s) {
-                if (fs_1.existsSync(path_1.resolve(_this.path, "node_modules")))
-                    return Object.keys(JSON.parse(fs_1.readFileSync(path_1.resolve(_this.path, "node_modules", m, "package.json"), "utf8")).bin || {}).find(function (bin) { return s.includes(bin); });
-                else if (fs_1.existsSync(path_1.resolve(_this.path, "../", "node_modules")))
-                    return Object.keys(JSON.parse(fs_1.readFileSync(path_1.resolve(_this.path, "../", "node_modules", m, "package.json"), "utf8")).bin || {}).find(function (bin) { return s.includes(bin); });
+                if (fs_1.existsSync(path_1.resolve(_this.path, "node_modules"))) {
+                    var mBin = JSON.parse(fs_1.readFileSync(path_1.resolve(_this.path, "node_modules", m, "package.json"), "utf8")).bin;
+                    return (typeof mBin !== "object"
+                        ? [m]
+                        : Object.keys(mBin || {})).find(function (bin) {
+                        console.log(bin, m);
+                        return s.toLowerCase().includes(bin.toLowerCase());
+                    });
+                }
+                else if (fs_1.existsSync(path_1.resolve(_this.path, "../", "node_modules"))) {
+                    var mBin = JSON.parse(fs_1.readFileSync(path_1.resolve(_this.path, "../", "node_modules", m, "package.json"), "utf8")).bin;
+                    return (typeof mBin !== "object"
+                        ? [m]
+                        : Object.keys(mBin || {})).find(function (bin) {
+                        console.log(bin, m);
+                        return s.toLowerCase().includes(bin.toLowerCase());
+                    });
+                }
                 else
                     return true;
             });
@@ -581,4 +595,5 @@ var AutoPM = /** @class */ (function () {
     return AutoPM;
 }());
 exports.default = AutoPM;
+function readPackageBinaries() { }
 //# sourceMappingURL=index.js.map
