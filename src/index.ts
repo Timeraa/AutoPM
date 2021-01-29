@@ -9,7 +9,9 @@ import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 import { getAvailableAtTypesOfModules } from "./functions/getAtTypesOfModule";
-import getModuleVersions, { instanceOfModuleVersions } from "./functions/getModuleVersions";
+import getModuleVersions, {
+	instanceOfModuleVersions
+} from "./functions/getModuleVersions";
 import getUsedModules from "./functions/getUsedModules";
 
 export interface deprecatedModules {
@@ -515,5 +517,3 @@ export default class AutoPM {
 		this.outdatedModules = outdated;
 	}
 }
-
-function readPackageBinaries() {}

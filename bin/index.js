@@ -593,5 +593,4 @@ var AutoPM = /** @class */ (function () {
     return AutoPM;
 }());
 exports.default = AutoPM;
-function readPackageBinaries() { }
 //# sourceMappingURL=index.js.map
